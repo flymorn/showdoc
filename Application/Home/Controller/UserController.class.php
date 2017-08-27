@@ -7,32 +7,34 @@ class UserController extends BaseController {
 	//注册
 	public function register(){
 		if (!IS_POST) {
+			  $this->assign('CloseVerify',C('CloseVerify'));
 			  $this->display ();
 			}else{
 			  $username = I("username");
 			  $password = I("password");
 			  $confirm_password = I("confirm_password");
 			  $v_code = I("v_code");
-			  if ($v_code && $v_code == session('v_code')) {
-			  	if ( $password != '' && $password == $confirm_password) {
+			  if (C('CloseVerify') || $v_code && $v_code == session('v_code') ) {
+		  		if ( $password != '' && $password == $confirm_password) {
 
 			  		if ( ! D("User")->isExist($username) ) {
 						$ret = D("User")->register($username,$password);
 						if ($ret) {
-					      $this->message("注册成功！",U('Home/User/login'));					    
+					      $this->message(L('register_succeeded'),U('Home/User/login'));					    
 						}else{
-						  $this->message("用户名或密码不正确");
+						  $this->message('register fail');
 						}
 			  		}else{
-			  			$this->message("用户名已经存在啦！");
+			  			$this->message(L('username_exists'));
 			  		}
 
 			  	}else{
-			  		$this->message("两次输入的密码不一致！");
+			  		$this->message(L('code_much_the_same'));
 			  	}
 			  }else{
-			    $this->message("验证码不正确");
+				    $this->message(L('verification_code_are_incorrect'));
 			  }
+			  
 
 			}
 	}
@@ -46,38 +48,54 @@ class UserController extends BaseController {
 			//如果有cookie记录，则自动登录
 			$cookie_token = cookie('cookie_token');
 			if ($cookie_token) {
-				$ret = D("User")->where("cookie_token = '%s' ",array($cookie_token))->find();
-				if ($ret && $ret['cookie_token_expire'] > time() ) {
-					$login_user = $ret ;
+				$ret = D("UserToken")->getToken($cookie_token);
+				if ($ret && $ret['token_expire'] > time() ) {
+					D("User")->setLastTime($ret['uid']);
+					$login_user = D("User")->where(array('uid' => $ret['uid']))->field('password', true)->find();
 					session("login_user" , $login_user);
-					$this->message("自动登录成功！正在跳转...",U('Home/Item/index'));
+					$this->message(L('auto_login_succeeded'),U('Home/Item/index'));
 					exit();
 				}
 			}
-		  $this->display ();
+			$this->assign('CloseVerify',C('CloseVerify'));
+		  	$this->display ();
 
 		}else{
 		  $username = I("username");
 		  $password = I("password");
 		  $v_code = I("v_code");
-		  if ($v_code && $v_code == session('v_code')) {
-		    $ret = D("User")->checkLogin($username,$password);
+		  if (C('CloseVerify')) { //如果关闭验证码
+		  	$ret = D("User")->checkLogin($username,$password);
 		    if ($ret) {
 		      session("login_user" , $ret );
-		      $cookie_token = md5(time().rand().'efeffthdh');
-		      $cookie_token_expire = time() + 60*60*24*90 ;
-	          cookie('cookie_token',$cookie_token,60*60*24*90);
-		      D("User")->where(" uid = '$ret[uid]' ")->save(array("last_login_time"=>time(),"cookie_token"=>$cookie_token,"cookie_token_expire"=>$cookie_token_expire));
+		      D("User")->setLastTime($ret['uid']);
+		      $token = D("UserToken")->createToken($ret['uid']);
+	          cookie('cookie_token',$token,60*60*24*90);//此处由服务端控制token是否过期，所以cookies过期时间设置多久都无所谓
 		      unset($ret['password']);
-
-	          $this->message("登录成功！",U('Home/Item/index'));		        
+	          $this->message(L('login_succeeded'),U('Home/Item/index'));		        
 		    }else{
-		      $this->message("用户名或密码不正确");
+		      $this->message(L('username_or_password_incorrect'));
 		    }
-
 		  }else{
-		    $this->message("验证码不正确");
+			  if ($v_code && $v_code == session('v_code')) {
+			    $ret = D("User")->checkLogin($username,$password);
+			    if ($ret) {
+			      session("login_user" , $ret );
+			  D("User")->setLastTime($ret['uid']);
+		      	  $token = D("UserToken")->createToken($ret['uid']);
+          		  cookie('cookie_token',$token,60*60*24*90);//此处由服务端控制token是否过期，所以cookies过期时间设置多久都无所谓
+			      unset($ret['password']);
+
+		          $this->message(L('login_succeeded'),U('Home/Item/index'));		        
+			    }else{
+			      $this->message(L('username_or_password_incorrect'));
+			    }
+
+			  }else{
+			    $this->message(L('verification_code_are_incorrect'));
+			  }	
 		  }
+		  
 
 		}
 	}
@@ -123,14 +141,14 @@ class UserController extends BaseController {
 			if ($ret) {
 					$ret = D("User")->updatePwd($user['uid'],$new_password);
 					if ($ret) {
-						$this->message("修改成功！",U("Home/Item/index"));
+						$this->message(L('modify_succeeded'),U("Home/Item/index"));
 					}else{
-						$this->message("修改失败！");
+						$this->message(L('modify_faild'));
 
 					}
 
 				}else{	
-					$this->message("原密码不正确");
+					$this->message(L('old_password_incorrect'));
 				}
 
 		}
@@ -141,6 +159,7 @@ class UserController extends BaseController {
 		$login_user = $this->checkLogin();
 		session("login_user" , NULL);
 		cookie('cookie_token',NULL);
-		$this->message("退出成功！",U('Home/index/index'));
+		session(null);
+		$this->message(L('logout_succeeded'),U('Home/index/index'));
 	}
 }

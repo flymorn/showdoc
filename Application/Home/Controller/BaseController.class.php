@@ -10,15 +10,20 @@ class BaseController extends Controller {
 	}
 
 	public function checkLogin($redirect = true){
+    	if (strtolower(C("DB_TYPE")) == 'mysql' ) {
+            echo 'ShowDoc does not support mysql any more . https://www.showdoc.cc/help?page_id=31990 ';
+            clear_runtime();
+            exit();
+    	}
 		if ( ! session("login_user")) {
 			$cookie_token = cookie('cookie_token');
 			if ($cookie_token) {
-				$ret = D("User")->where("cookie_token = '%s' ",array($cookie_token))->find();
-				if ($ret && $ret['cookie_token_expire'] > time() ) {
-					$login_user = $ret ;
+				$ret = D("UserToken")->getToken($cookie_token);
+				if ($ret && $ret['token_expire'] > time() ) {
+					$login_user = D("User")->where("uid = $ret[uid]")->find();
+					unset($ret['password']);
 					session("login_user" , $login_user);
 					return $login_user ;
-
 				}
 			}
 			if ($redirect) {
@@ -45,7 +50,7 @@ class BaseController extends Controller {
 		echo json_encode($result);
 	}
 
-	//判断某用户是否有项目管理权限（项目成员和项目创建者）
+	//判断某用户是否有项目管理权限（项目成员member_group_id为1，以及 项目创建者）
 	protected function checkItemPermn($uid , $item_id){
 
 		if (!$uid) {
@@ -61,7 +66,7 @@ class BaseController extends Controller {
 			session("mamage_item_".$item_id , 1 );
 			return true;
 		}
-		$ItemMember = D("ItemMember")->where("item_id = '%d' and uid = '%d' ",array($item_id,$uid))->find();
+		$ItemMember = D("ItemMember")->where("item_id = '%d' and uid = '%d' and member_group_id = 1 ",array($item_id,$uid))->find();
 		if ($ItemMember) {
 			session("mamage_item_".$item_id , 1 );
 			return true;
@@ -87,19 +92,26 @@ class BaseController extends Controller {
 	}
 
 	//判断某用户是否有项目访问权限（公开项目的话所有人可访问，私有项目则项目成员、项目创建者和访问密码输入者可访问）
-	protected function checkItemVisit($uid , $item_id){
+	protected function checkItemVisit($uid , $item_id, $refer_url= ''){
 		if (session("visit_item_".$item_id)) {
 			return true;
 		}
 
-		if ($this->checkItemPermn($uid , $item_id)) {
+		if ($this->checkItemCreator($uid , $item_id)) {
+			session("visit_item_".$item_id , 1 );
+			return true;
+		}
+
+		$ItemMember = D("ItemMember")->where("item_id = '%d' and uid = '%d'  ",array($item_id,$uid))->find();
+		if ($ItemMember) {
+			session("visit_item_".$item_id , 1 );
 			return true;
 		}
 
 		$item = D("Item")->where("item_id = '%d' ",array($item_id))->find();
 		if ($item['password']) {
 			//跳转到输入访问密码框
-			header("location:".U("Home/item/pwd").'?item_id='.$item_id);
+			header("location:".U("Home/item/pwd",array("item_id"=>$item_id,"refer_url"=>base64_encode($refer_url))));
 		}else{
 			session("visit_item_".$item_id , 1 );
 			return true;

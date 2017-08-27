@@ -18,6 +18,7 @@
     padding-right: 40px;
   }
   .doc-left{
+    width: 240px;
     position: relative;
     padding-top: 10px;
     min-height: 100%;
@@ -73,62 +74,86 @@
   .iframe_content{
     padding-left: 20px;
     padding-right: 20px;
+    width: 80%;
+    max-width: 700px;
+    margin: 0 auto;
   }
 
   .search-query-input{
-    width: 130px;
+    width: 140px;
   }
+.third-child-catalog{
+  margin-left: -16px;
+}
 
+@media screen and (min-width:500px){
+  .doc-right{ width: 400px;} 
+}
+
+@media screen and (min-width:600px){
+  .doc-right{ width: 500px;} 
+}
+
+@media screen and (min-width:700px){
+  .doc-right{ width: 600px;} 
+}
+
+@media screen and (min-width:800px){
+  .doc-right{ width: 700px;} 
+}
+
+@media screen and (min-width:900px){
+  .doc-right{ width: 800px;} 
+}
+
+@media screen and (min-width:1000px){
+  .doc-right{ width: 700px;} 
+}
+
+@media screen and (min-width:1100px){
+  .doc-right{ width: 800px;} 
+}
 
 @media screen and (min-width:1200px){
-  .doc-right{ width: 930px;} 
+  .doc-right{ width: 900px;} 
 }
 @media screen and (min-width:1300px){
-  .doc-right{ width: 1030px;} 
+  .doc-right{ width: 1000px;} 
 }
 @media screen and (min-width:1400px){
-  .doc-right{ width: 1130px;} 
+  .doc-right{ width: 1100px;} 
 }
 @media screen and (min-width:1500px){
-  .doc-right{ width: 1230px;} 
+  .doc-right{ width: 1200px;} 
 }
 @media screen and (min-width:1600px){
-  .doc-right{ width: 1330px;} 
+  .doc-right{ width: 1300px;} 
 }
 @media screen and (min-width:1700px){
-  .doc-right{ width: 1430px;} 
+  .doc-right{ width: 1400px;} 
 }
 @media screen and (min-width:1800px){
-  .doc-right{ width: 1530px;} 
+  .doc-right{ width: 1500px;} 
 }
 @media screen and (min-width:1900px){
-  .doc-right{ width: 1630px;} 
+  .doc-right{ width: 1600px;} 
 }
 
+.page-edit-link .btn-link{
+  padding-right: 4px;
+  padding-left: 4px;
+  margin-right: 0px;
+  margin-left: 0px;
+}
 
+.show_cut_title{
+  white-space:nowrap;
+  text-overflow:ellipsis; 
+  -o-text-overflow:ellipsis; 
+  overflow:hidden
+}
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
+.left-dropdown-menu{
+  left: auto;
+   right: 0;
+}

@@ -8,7 +8,7 @@ class MemberController extends BaseController {
         $item_id =  I("item_id");
         $login_user = $this->checkLogin();
         if (!$this->checkItemCreator($login_user['uid'] , $item_id)) {
-            $this->message("你无权限");
+            $this->message(L('no_permissions'));
             return;
         }
         $this->assign("item_id" , $item_id);
@@ -19,9 +19,10 @@ class MemberController extends BaseController {
     //保存
     public function save(){
         $item_id =  I("item_id/d");
+        $member_group_id =  I("member_group_id/d");
         $login_user = $this->checkLogin();
         if (!$this->checkItemCreator($login_user['uid'] , $item_id)) {
-            $this->message("你无权限");
+            $this->message(L('no_permissions'));
             return;
         }
         $username = I("username");
@@ -29,7 +30,7 @@ class MemberController extends BaseController {
 
         if (!$member) {
             $return['error_code'] = 10201 ;
-            $return['error_message'] = '不存在此用户！' ;
+            $return['error_message'] =L('user_does_not_exist') ;
             $this->sendResult($return);
             return ;
         }
@@ -37,6 +38,7 @@ class MemberController extends BaseController {
         $data['username'] = $member['username'] ;
         $data['uid'] = $member['uid'] ;
         $data['item_id'] = $item_id ;
+        $data['member_group_id'] = $member_group_id ;
         $data['addtime'] = time() ;
         
 
@@ -56,7 +58,7 @@ class MemberController extends BaseController {
     public function getList(){
         $item_id = I("item_id/d");
         if ($item_id > 0 ) {
-            $ret = D("ItemMember")->where(" item_id = '$item_id' ")->order(" 'order', addtime asc  ")->select();
+            $ret = D("ItemMember")->where(" item_id = '$item_id' ")->order(" addtime asc  ")->select();
         }
         if ($ret) {
            $this->sendResult($ret);
@@ -67,19 +69,19 @@ class MemberController extends BaseController {
         }
     }
 
-    //删除目录
+    //删除成员
     public function delete(){
         $item_id = I("item_id/d")? I("item_id/d") : 0;
         $login_user = $this->checkLogin();
         if (!$this->checkItemCreator($login_user['uid'] , $item_id)) {
-            $this->message("你无权限");
+            $this->message(L('no_permissions'));
             return;
         }
         $username = I("username")? I("username") : 0;
 
         if ($username) {
             
-            $ret = D("ItemMember")->where(" item_id = '%d' and username = '%s'  ",array($item_id,$username))->limit(1)->delete();
+            $ret = D("ItemMember")->where(" item_id = '%d' and username = '%s'  ",array($item_id,$username))->delete();
 
         }
         if ($ret) {
